@@ -25,25 +25,40 @@ passport.use(
     clientSecret: keys.googleClientSecret,
     callbackURL: '/auth/google/callback',
     proxy: true
-  }, (accessToken,refreshToken,profile,done) => { 
+  }, 
+  async (accessToken,refreshToken,profile,done) => { 
     
-    console.log("Passport!")
-// async action!
-    User.findOne({ googleId: profile.id })
-    .then((existingUser) => {
-      if (existingUser) {
-        // already have a record
-        console.log("existing user!")
+    const existingUser = await User.findOne({ googleId: profile.id })
 
-
-        // this is causing a crash...
-        done(null,existingUser);
-      } else {
-        // create new user
-        new User({ googleId: profile.id })
-          .save()
-          .then(user => done(null,done));   
-      }
-    });
+    if (existingUser) {
+      console.log("Passport >> existing user")
+      return done(null,existingUser);
+    } 
+      
+    console.log("Passport >> new user")
+    const user = await new User({ googleId: profile.id }).save()
+    done(null,done); 
   })
+
 );
+
+//refactored - switch to async/await
+
+/*
+async (accessToken,refreshToken,profile,done) => { 
+    
+  console.log("Passport!")
+// async action!
+  const existingUser = await User.findOne({ googleId: profile.id })
+
+  if (existingUser) {
+    done(null,existingUser);
+  } else {
+      // create new user
+    const user = await new User({ googleId: profile.id }).save()
+    done(null,done); 
+  }
+
+  // create new user
+  
+*/
